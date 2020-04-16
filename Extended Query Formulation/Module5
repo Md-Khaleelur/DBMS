@@ -1,0 +1,117 @@
+				MODULE 9
+
+
+1.For event requests, list the event number, event date (eventrequest.dateheld), 
+and count of the event plans.  Only include event requests in the result if the 
+event request has more than one related event plan with a work date in December 2018.
+
+SELECT er.eventNo, er.dateHeld, count( ep.planNo ) AS planNoCount
+FROM EVENTREQUEST er
+JOIN EVENTPLAN ep ON er.eventNo = ep.eventNo
+WHERE ep.workDate
+BETWEEN '2018-12-01'
+AND '2018-12-31'
+GROUP BY ep.eventNo
+HAVING planNoCount >1;
+
++---------+------------+-------------+
+| eventNo | dateHeld   | planNoCount |
++---------+------------+-------------+
+| E106    | 2018-12-12 |           2 |
++---------+------------+-------------+
+1 row in set (0.01 sec)
+
+
+
+
+2.List the plan number, event number, work date, and activity of event plans 
+meeting the following two conditions: 
+(1) the work date is in December 2018 and 
+(2) the event is held in the “Basketball arena”.  
+Your query must not use the facility number (“F101”) of the basketball arena 
+in the WHERE clause. Instead, you should use a condition on the FacName column 
+for the value of “Basketball arena”.
+
+SELECT EP.planNo, EP.eventNo, EP.workDate, EP.activity
+FROM EVENTPLAN EP
+JOIN EVENTREQUEST ER ON ER.eventNo = EP.eventNo
+JOIN FACILITY F ON ER.facNo = F.facNo
+WHERE F.facName = 'Basketball arena'
+AND date_format( EP.workDate, "%M %Y" ) = 'DECEMBER 2018';
+
++--------+---------+------------+-----------+
+| planNo | eventNo | workDate   | activity  |
++--------+---------+------------+-----------+
+| P101   | E104    | 2018-12-03 | Operation |
+| P102   | E105    | 2018-12-05 | Operation |
+| P103   | E106    | 2018-12-12 | Operation |
+| P349   | E106    | 2018-12-12 | Setup     |
++--------+---------+------------+-----------+
+4 rows in set (0.00 sec)
+
+
+
+3.List the event number, event date, status, and estimated cost of events where 
+there is an event plan managed by Mary Manager and the event is held in the 
+basketball arena in the period October 1 to December 31, 2018.  
+Your query must not use the facility number (“F101”) of the basketball arena or 
+the employee number (“E101”) of “Mary Manager” in the WHERE clause. 
+Thus, the WHERE clause should not have conditions involving the facility 
+number or employee number compared to constant values.
+
+
+
+SELECT EVENTREQUEST.eventNo, dateHeld,
+STATUS , estCost
+FROM EVENTREQUEST
+JOIN EVENTPLAN ON EVENTREQUEST.eventNo = EVENTPLAN.eventNo
+JOIN EMPLOYEE ON EVENTPLAN.empNo = EMPLOYEE.empno
+JOIN FACILITY ON FACILITY.facNo = EVENTREQUEST.facNo
+WHERE FACILITY.facName = 'Basketball arena'
+AND EMPLOYEE.empName = 'Mary Manager'
+AND DATE_FORMAT( dateHeld, "%M %Y" ) = 'DECEMBER 2018';
+
+
++---------+------------+----------+---------+
+| eventNo | dateHeld   | status   | estCost |
++---------+------------+----------+---------+
+| E106    | 2018-12-12 | Approved | 2000.00 |
++---------+------------+----------+---------+
+1 row in set (0.00 sec)
+
+
+
+4.List the plan number, line number, resource name, number of resources (eventplanline.number), 
+location name, time start, and time end where the event is held at the basketball arena, 
+the event plan has activity of activity of “Operation”, and the event plan has a 
+work date in the period October 1 to December 31, 2018.  Your query must not use the 
+facility number (“F101”) of the basketball arena in the WHERE clause. 
+Instead, you should use a condition on the FacName column for the value of “Basketball arena”.
+
+SELECT EVENTPLANLINE.planNo, EVENTPLANLINE.lineNo, RESOURCETBL.resName, EVENTPLANLINE.numberFLD, 
+LOCATION.locName, EVENTPLANLINE.timeStart, EVENTPLANLINE.timeEnd   
+FROM EVENTPLANLINE
+JOIN LOCATION ON EVENTPLANLINE.locNo = LOCATION.locNo
+JOIN FACILITY ON LOCATION.facNo = FACILITY.facNo
+JOIN EVENTPLAN ON EVENTPLAN.planNo = EVENTPLANLINE.planNo
+JOIN RESOURCETBL ON RESOURCETBL.resNO = EVENTPLANLINE.resNo
+WHERE FACILITY.facName = 'Basketball arena'
+AND EVENTPLAN.activity = 'Operation'
+AND DATE_FORMAT( EVENTPLAN.workDate, "%M %Y" ) = 'DECEMBER 2018';
+
+
+
++--------+--------+-----------+-----------+-------------+---------------------+---------------------+
+| planNo | lineNo | resName   | numberFLD | locName     | timeStart           | timeEnd             |
++--------+--------+-----------+-----------+-------------+---------------------+---------------------+
+| P101   | 1      | attendant |         2 | Locker room | 2018-12-03 18:00:00 | 2018-12-03 20:00:00 |
+| P101   | 2      | attendant |         4 | Gate        | 2018-12-03 18:30:00 | 2018-12-03 19:00:00 |
+| P101   | 3      | nurse     |         2 | Locker room | 2018-12-03 19:00:00 | 2018-12-03 20:00:00 |
+| P102   | 1      | attendant |         2 | Locker room | 2018-12-05 18:00:00 | 2018-12-05 19:00:00 |
+| P102   | 2      | attendant |         4 | Gate        | 2018-12-05 18:00:00 | 2018-12-05 21:00:00 |
+| P102   | 3      | nurse     |         2 | Locker room | 2018-12-05 19:00:00 | 2018-12-05 22:00:00 |
+| P103   | 1      | attendant |         2 | Locker room | 2018-12-12 18:00:00 | 2018-12-12 21:00:00 |
+| P103   | 2      | attendant |         4 | Gate        | 2018-12-12 18:00:00 | 2018-12-12 21:00:00 |
+| P103   | 3      | nurse     |         2 | Locker room | 2018-12-12 19:00:00 | 2018-12-12 22:00:00 |
++--------+--------+-----------+-----------+-------------+---------------------+---------------------+
+9 rows in set (0.01 sec)
